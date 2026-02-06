@@ -48,6 +48,12 @@ openapi2cli generate https://httpbin.org/spec.json --name httpbin
 uv add openapi2cli
 ```
 
+### Install as OpenClaw skill
+
+```bash
+clawhub install openapi2cli
+```
+
 Or with pip:
 
 ```bash
@@ -243,6 +249,12 @@ The generated CLI uses `requests` for HTTP and optionally `rich` for pretty outp
 - No file upload support yet
 - Complex nested request bodies may need `--data` JSON flag
 - OAuth2 flows not fully implemented (use `--token` with pre-obtained tokens)
+
+## Links
+
+- [PyPI](https://pypi.org/project/openapi2cli/)
+- [GitHub](https://github.com/Olafs-World/openapi2cli)
+- [ClawHub Skill](https://clawhub.com/skills/openapi2cli)
 
 ## License
 
