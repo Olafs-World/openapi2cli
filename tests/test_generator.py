@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from api2cli.generator import CLIGenerator, GeneratedCLI
-from api2cli.parser import OpenAPIParser
+from openapi2cli.generator import CLIGenerator, GeneratedCLI
+from openapi2cli.parser import OpenAPIParser
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

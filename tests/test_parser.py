@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from api2cli.parser import OpenAPIParser, ParsedSpec
+from openapi2cli.parser import OpenAPIParser, ParsedSpec
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

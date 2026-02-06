@@ -1,4 +1,4 @@
-"""Main CLI for api2cli."""
+"""Main CLI for openapi2cli."""
 
 import sys
 from pathlib import Path
@@ -13,14 +13,14 @@ from .parser import OpenAPIParser
 @click.group()
 @click.version_option(version=__version__)
 def main():
-    """api2cli - Generate CLI tools from OpenAPI specs.
+    """openapi2cli - Generate CLI tools from OpenAPI specs.
 
     Built for AI agents who need to interact with APIs.
 
     Example:
 
         # Generate a CLI from a spec
-        api2cli generate https://httpbin.org/spec.json --name httpbin
+        openapi2cli generate https://httpbin.org/spec.json --name httpbin
 
         # Then use it
         ./httpbin get --output json
@@ -40,8 +40,8 @@ def generate(spec: str, name: str, output: str, stdout: bool):
 
     Examples:
 
-        api2cli generate petstore.yaml --name petstore
-        api2cli generate https://api.example.com/openapi.json --name example -o example_cli.py
+        openapi2cli generate petstore.yaml --name petstore
+        openapi2cli generate https://api.example.com/openapi.json --name example -o example_cli.py
     """
     try:
         # Parse the spec

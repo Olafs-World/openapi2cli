@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from api2cli.generator import CLIGenerator
-from api2cli.parser import OpenAPIParser
-from api2cli.runtime import APIClient, CLIRunner
+from openapi2cli.generator import CLIGenerator
+from openapi2cli.parser import OpenAPIParser
+from openapi2cli.runtime import APIClient, CLIRunner
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

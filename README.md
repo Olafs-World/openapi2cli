@@ -1,7 +1,7 @@
-# api2cli 🔧
+# openapi2cli 🔧
 
-[![CI](https://github.com/Olafs-World/api2cli/actions/workflows/ci.yml/badge.svg)](https://github.com/Olafs-World/api2cli/actions/workflows/ci.yml)
-[![PyPI version](https://badge.fury.io/py/api2cli.svg)](https://pypi.org/project/api2cli/)
+[![CI](https://github.com/Olafs-World/openapi2cli/actions/workflows/ci.yml/badge.svg)](https://github.com/Olafs-World/openapi2cli/actions/workflows/ci.yml)
+[![PyPI version](https://badge.fury.io/py/openapi2cli.svg)](https://pypi.org/project/openapi2cli/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -9,7 +9,7 @@
 
 ```bash
 # Generate a CLI from any OpenAPI spec
-$ api2cli generate https://httpbin.org/spec.json --name httpbin
+$ openapi2cli generate https://httpbin.org/spec.json --name httpbin
 
 # Use it immediately
 $ ./httpbin_cli.py get --output json
@@ -30,7 +30,7 @@ AI agents are great at executing CLI commands. They're less great at crafting HT
 ## Installation
 
 ```bash
-pip install api2cli
+pip install openapi2cli
 ```
 
 ## Quick Start
@@ -39,10 +39,10 @@ pip install api2cli
 
 ```bash
 # From a URL
-api2cli generate https://petstore3.swagger.io/api/v3/openapi.json --name petstore
+openapi2cli generate https://petstore3.swagger.io/api/v3/openapi.json --name petstore
 
 # From a local file
-api2cli generate ./api-spec.yaml --name myapi --output myapi
+openapi2cli generate ./api-spec.yaml --name myapi --output myapi
 ```
 
 ### Use the Generated CLI
@@ -66,7 +66,7 @@ export PETSTORE_API_KEY=your-key
 
 ```bash
 # See what's in a spec without generating
-api2cli inspect https://httpbin.org/spec.json
+openapi2cli inspect https://httpbin.org/spec.json
 ```
 
 ## Features
@@ -144,10 +144,10 @@ petstore
 
 ## API Reference
 
-### `api2cli generate`
+### `openapi2cli generate`
 
 ```
-api2cli generate SPEC --name NAME [--output PATH] [--stdout]
+openapi2cli generate SPEC --name NAME [--output PATH] [--stdout]
 
 Arguments:
   SPEC          OpenAPI spec (file path or URL)
@@ -158,10 +158,10 @@ Options:
   --stdout      Print to stdout instead of file
 ```
 
-### `api2cli inspect`
+### `openapi2cli inspect`
 
 ```
-api2cli inspect SPEC
+openapi2cli inspect SPEC
 
 Arguments:
   SPEC          OpenAPI spec (file path or URL)
@@ -170,7 +170,7 @@ Arguments:
 ### Python API
 
 ```python
-from api2cli import OpenAPIParser, CLIGenerator
+from openapi2cli import OpenAPIParser, CLIGenerator
 
 # Parse a spec
 parser = OpenAPIParser()
@@ -194,8 +194,8 @@ code = cli.to_python()
 
 ```bash
 # Clone
-git clone https://github.com/Olafs-World/api2cli.git
-cd api2cli
+git clone https://github.com/Olafs-World/openapi2cli.git
+cd openapi2cli
 
 # Install dev dependencies
 pip install -e ".[dev]"
