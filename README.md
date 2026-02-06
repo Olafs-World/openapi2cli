@@ -30,6 +30,12 @@ AI agents are great at executing CLI commands. They're less great at crafting HT
 ## Installation
 
 ```bash
+uv add openapi2cli
+```
+
+Or with pip:
+
+```bash
 pip install openapi2cli
 ```
 
@@ -198,13 +204,13 @@ git clone https://github.com/Olafs-World/openapi2cli.git
 cd openapi2cli
 
 # Install dev dependencies
-pip install -e ".[dev]"
+uv sync --extra dev
 
 # Run tests
-pytest tests/ -v
+uv run pytest tests/ -v
 
 # Run only unit tests (no API calls)
-pytest tests/ -v -m "not integration"
+uv run pytest tests/ -v -m "not integration"
 ```
 
 ## How It Works
