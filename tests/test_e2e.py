@@ -1,4 +1,4 @@
-"""End-to-end tests for api2cli."""
+"""End-to-end tests for openapi2cli."""
 
 import subprocess
 import sys
@@ -10,13 +10,13 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 class TestCLIEndToEnd:
-    """End-to-end tests for the api2cli command."""
+    """End-to-end tests for the openapi2cli command."""
 
     def test_generate_from_file(self, tmp_path):
         """Can generate CLI from a local file."""
         result = subprocess.run(
             [
-                sys.executable, "-m", "api2cli",
+                sys.executable, "-m", "openapi2cli",
                 "generate",
                 str(FIXTURES / "petstore.yaml"),
                 "--name", "petstore",
@@ -33,7 +33,7 @@ class TestCLIEndToEnd:
         """Can generate CLI from a URL."""
         result = subprocess.run(
             [
-                sys.executable, "-m", "api2cli",
+                sys.executable, "-m", "openapi2cli",
                 "generate",
                 "https://httpbin.org/spec.json",
                 "--name", "httpbin",
@@ -51,7 +51,7 @@ class TestCLIEndToEnd:
         # Generate
         subprocess.run(
             [
-                sys.executable, "-m", "api2cli",
+                sys.executable, "-m", "openapi2cli",
                 "generate",
                 str(FIXTURES / "httpbin.json"),
                 "--name", "httpbin",
@@ -77,7 +77,7 @@ class TestCLIEndToEnd:
         # Generate
         subprocess.run(
             [
-                sys.executable, "-m", "api2cli",
+                sys.executable, "-m", "openapi2cli",
                 "generate",
                 str(FIXTURES / "httpbin.json"),
                 "--name", "httpbin",
@@ -104,9 +104,9 @@ class TestCLIEndToEnd:
             assert "url" in result.stdout.lower() or "httpbin" in result.stdout.lower()
 
     def test_help_command(self):
-        """api2cli --help works."""
+        """openapi2cli --help works."""
         result = subprocess.run(
-            [sys.executable, "-m", "api2cli", "--help"],
+            [sys.executable, "-m", "openapi2cli", "--help"],
             capture_output=True,
             text=True
         )
@@ -115,9 +115,9 @@ class TestCLIEndToEnd:
         assert "generate" in result.stdout.lower()
 
     def test_version_command(self):
-        """api2cli --version works."""
+        """openapi2cli --version works."""
         result = subprocess.run(
-            [sys.executable, "-m", "api2cli", "--version"],
+            [sys.executable, "-m", "openapi2cli", "--version"],
             capture_output=True,
             text=True
         )
@@ -134,7 +134,7 @@ class TestRealWorldSpecs:
         # Generate CLI
         gen_result = subprocess.run(
             [
-                sys.executable, "-m", "api2cli",
+                sys.executable, "-m", "openapi2cli",
                 "generate",
                 str(FIXTURES / "petstore.yaml"),
                 "--name", "petstore",
@@ -163,7 +163,7 @@ class TestRealWorldSpecs:
         # Generate
         subprocess.run(
             [
-                sys.executable, "-m", "api2cli",
+                sys.executable, "-m", "openapi2cli",
                 "generate",
                 "https://httpbin.org/spec.json",
                 "--name", "httpbin",
