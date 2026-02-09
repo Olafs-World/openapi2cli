@@ -21,6 +21,18 @@ class CLIOption:
     help: str = ""
     is_flag: bool = False
     multiple: bool = False
+    location: str = "query"  # path, query, header, cookie, body, body_raw
+    api_name: str = ""        # original API parameter/property name
+
+    @property
+    def help_literal(self) -> str:
+        """Python string literal for Click help text."""
+        return repr(self.help or "")
+
+    @property
+    def default_literal(self) -> str:
+        """Python string literal for default value."""
+        return repr(self.default)
 
 
 @dataclass
@@ -55,6 +67,7 @@ class GeneratedCLI:
     groups: List[CLIGroup] = field(default_factory=list)
     global_options: List[CLIOption] = field(default_factory=list)
     auth_schemes: List[AuthScheme] = field(default_factory=list)
+    api_key_header_name: str = ""
 
     def to_python(self) -> str:
         """Generate Python code for the CLI."""
@@ -93,11 +106,12 @@ class CLIGenerator:
         return GeneratedCLI(
             name=name,
             version=spec.version,
-            description=spec.description or f"CLI for {spec.title}",
+            description=self._clean_text(spec.description) or f"CLI for {self._clean_text(spec.title)}",
             base_url=spec.base_url,
             groups=groups,
             global_options=global_options,
             auth_schemes=spec.auth_schemes,
+            api_key_header_name=self._api_key_header_name(spec.auth_schemes),
         )
 
     def _generate_global_options(self, spec: ParsedSpec) -> List[CLIOption]:
@@ -152,7 +166,7 @@ class CLIGenerator:
 
         return CLIGroup(
             name=self._sanitize_name(tag),
-            help=f"Commands for {tag}",
+            help=f"Commands for {self._clean_text(tag)}",
             commands=commands,
         )
 
@@ -174,7 +188,9 @@ class CLIGenerator:
                 param_type=self._map_type(param.schema_type),
                 required=param.required,
                 default=str(param.default) if param.default is not None else None,
-                help=param.description or f"{param.name} parameter",
+                help=self._clean_text(param.description) or f"{param.name} parameter",
+                location=param.location,
+                api_name=param.name,
             ))
 
         # Add options for request body properties
@@ -187,7 +203,9 @@ class CLIGenerator:
                     name=f"--{self._sanitize_name(prop_name)}",
                     param_type=self._map_type(prop_schema.get('type', 'string')),
                     required=required,
-                    help=prop_schema.get('description', f"{prop_name} field"),
+                    help=self._clean_text(prop_schema.get('description', '')) or f"{prop_name} field",
+                    location="body",
+                    api_name=prop_name,
                 ))
 
             # Also add a --data option for raw JSON input
@@ -195,13 +213,15 @@ class CLIGenerator:
                 name="--data",
                 param_type="str",
                 help="Raw JSON data for request body",
+                location="body_raw",
+                api_name="data",
             ))
 
         return CLICommand(
             name=endpoint.cli_name,
             method=endpoint.method,
             path=endpoint.path,
-            help=endpoint.summary or endpoint.description or f"{endpoint.method} {endpoint.path}",
+            help=self._clean_text(endpoint.summary) or self._clean_text(endpoint.description) or f"{endpoint.method} {endpoint.path}",
             options=options,
             has_body=has_body,
         )
@@ -230,6 +250,19 @@ class CLIGenerator:
             'object': 'str',  # JSON string for objects
         }
         return mapping.get(schema_type, 'str')
+
+    def _clean_text(self, text: str) -> str:
+        """Normalize free-text fields so they are safe in generated source strings."""
+        if not text:
+            return ""
+        return re.sub(r"\s+", " ", str(text)).strip()
+
+    def _api_key_header_name(self, auth_schemes: List[AuthScheme]) -> str:
+        """Return the API key header name, if the spec defines one."""
+        for scheme in auth_schemes:
+            if scheme.type == "apiKey" and scheme.location == "header" and scheme.param_name:
+                return scheme.param_name
+        return ""
 
 
 # Template for generated CLI - use raw strings to avoid escaping issues
@@ -271,12 +304,9 @@ def get_auth_headers(api_key: Optional[str] = None, token: Optional[str] = None)
     if tok:
         headers["Authorization"] = "Bearer " + tok
     elif key:
-        {%- for scheme in cli.auth_schemes %}
-        {%- if scheme.type == "apiKey" and scheme.location == "header" %}
-        headers["{{ scheme.param_name }}"] = key
-        {%- endif %}
-        {%- endfor %}
-        {%- if not cli.auth_schemes %}
+        {%- if cli.api_key_header_name %}
+        headers["{{ cli.api_key_header_name }}"] = key
+        {%- else %}
         headers["X-API-Key"] = key
         {%- endif %}
 
@@ -380,7 +410,7 @@ def {{ group.name | replace("-", "_") }}():
 
 @{{ group.name | replace("-", "_") }}.command("{{ cmd.name }}")
 {%- for opt in cmd.options %}
-@click.option("{{ opt.name }}"{% if opt.required %}, required=True{% endif %}{% if opt.default %}, default="{{ opt.default }}"{% endif %}, help="{{ opt.help | replace('"', '\\"') }}")
+@click.option("{{ opt.name }}"{% if opt.required %}, required=True{% endif %}{% if opt.default is not none %}, default={{ opt.default_literal }}{% endif %}, help={{ opt.help_literal }})
 {%- endfor %}
 @click.pass_context
 def {{ group.name | replace("-", "_") | replace(".", "_") }}_{{ cmd.name | replace("-", "_") | replace(".", "_") }}(ctx{% for opt in cmd.options %}, {{ opt.name | replace("--", "") | replace("-", "_") | replace(".", "_") }}{% endfor %}):
@@ -392,14 +422,14 @@ def {{ group.name | replace("-", "_") | replace(".", "_") }}_{{ cmd.name | repla
     {%- for opt in cmd.options %}
     {%- set var_name = opt.name | replace("--", "") | replace("-", "_") %}
     if {{ var_name }} is not None:
-        {%- if "id" in opt.name.lower() and "{" in cmd.path %}
-        path_params["{{ opt.name | replace("--", "") | replace("-", "") }}"] = {{ var_name }}
-        {%- elif opt.name == "--data" %}
+        {%- if opt.location == "path" %}
+        path_params["{{ opt.api_name }}"] = {{ var_name }}
+        {%- elif opt.location == "body_raw" %}
         body_data = json.loads({{ var_name }})
-        {%- elif cmd.has_body and opt.name != "--data" %}
-        body_data["{{ opt.name | replace("--", "") | replace("-", "_") }}"] = {{ var_name }}
+        {%- elif opt.location == "body" %}
+        body_data["{{ opt.api_name }}"] = {{ var_name }}
         {%- else %}
-        query_params["{{ opt.name | replace("--", "") }}"] = {{ var_name }}
+        query_params["{{ opt.api_name }}"] = {{ var_name }}
         {%- endif %}
     {%- endfor %}
 

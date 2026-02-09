@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from openapi2cli.generator import CLIGenerator, GeneratedCLI
-from openapi2cli.parser import OpenAPIParser
+from openapi2cli.parser import Endpoint, OpenAPIParser, Parameter, ParsedSpec
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -143,6 +143,65 @@ class TestCLIGenerator:
 
         # Should compile without syntax errors
         compile(code, "<generated>", "exec")
+
+    def test_escapes_multiline_quoted_help_text(self):
+        """Escapes multiline parameter descriptions with embedded quotes."""
+        spec = ParsedSpec(
+            title="Demo",
+            version="1.0.0",
+            description="Demo API",
+            base_url="https://api.example.com",
+            endpoints=[
+                Endpoint(
+                    path="/events",
+                    method="GET",
+                    operation_id="listEvents",
+                    tags=["events"],
+                    parameters=[
+                        Parameter(
+                            name="min_start_time",
+                            location="query",
+                            description='Include events after "2020-01-02T03:04:05.678Z".\nUse UTC.',
+                        )
+                    ],
+                )
+            ],
+        )
+
+        generator = CLIGenerator()
+        cli = generator.generate(spec, name="demo")
+        code = cli.to_python()
+
+        # Should compile without syntax errors from help string generation
+        compile(code, "<generated>", "exec")
+
+    def test_maps_path_and_query_params_using_openapi_names(self):
+        """Uses OpenAPI param locations/names instead of CLI-name heuristics."""
+        spec = ParsedSpec(
+            title="Demo",
+            version="1.0.0",
+            description="Demo API",
+            base_url="https://api.example.com",
+            endpoints=[
+                Endpoint(
+                    path="/users/{uuid}",
+                    method="GET",
+                    operation_id="getUser",
+                    tags=["users"],
+                    parameters=[
+                        Parameter(name="uuid", location="path", required=True),
+                        Parameter(name="min_start_time", location="query"),
+                    ],
+                )
+            ],
+        )
+
+        generator = CLIGenerator()
+        cli = generator.generate(spec, name="demo")
+        code = cli.to_python()
+
+        assert 'path_params["uuid"] = uuid' in code
+        assert 'query_params["min_start_time"] = min_start_time' in code
 
 
 class TestGeneratedCLI:
